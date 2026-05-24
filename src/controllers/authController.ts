@@ -1,13 +1,16 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
+import type { CookieSerializeOptions } from '@fastify/cookie'
 import { authService } from '../services/authService'
 import { CreateUserSchema } from '../dtos/requests/CreateUserDto'
 import { LoginSchema } from '../dtos/requests/LoginDto'
 import { createApiResponse } from '../utils/validation'
 
-const COOKIE_OPTS = {
+const isProd = process.env.NODE_ENV === 'production'
+
+const COOKIE_OPTS: CookieSerializeOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict' as const,
+  secure: isProd,
+  sameSite: isProd ? 'none' : 'strict',
   path: '/',
 }
 
