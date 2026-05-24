@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  // Encrypted at rest: AES-256-CBC
+  nameEncrypted  String @map("name_encrypted")
+  phoneEncrypted String @map("phone_encrypted")
+  role         Role     @default(CLIENT)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  appointments Appointment[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model Professional {
+  id           String   @id @default(uuid())
+  nameEncrypted String  @map("name_encrypted")
+  bio          String?
+  isActive     Boolean  @default(true) @map("is_active")
+  isWalkIn     Boolean  @default(false) @map("is_walk_in")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  appointments Appointment[]
+  availability ProfessionalAvailability[]
+
+  @@map("professionals")
+}
+
+model Service {
+  id              String   @id @default(uuid())
+  name            String
+  description     String?
+  // Amount stored in cents to avoid floating point issues
+  amountCents     Int      @map("amount_cents")
+  durationMinutes Int      @map("duration_minutes")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  appointments        Appointment[]
+  appointmentServices AppointmentService[]
+
+  @@map("services")
+}
+
+model Appointment {
+  id             String            @id @default(uuid())
+  // Null for guest (public) bookings — authenticated users set this
+  userId         String?           @map("user_id")
+  professionalId String            @map("professional_id")
+  serviceId      String            @map("service_id")
+  // Amount snapshot at booking time — always fetched from DB, never from client
+  amountCents    Int               @map("amount_cents")
+  scheduledAt    DateTime          @map("scheduled_at")
+  status         AppointmentStatus @default(PENDING)
+  notes          String?
+  // Guest booking PII — AES-256-CBC encrypted at rest
+  guestNameEncrypted  String?      @map("guest_name_encrypted")
+  guestPhoneEncrypted String?      @map("guest_phone_encrypted")
+  guestEmailEncrypted String?      @map("guest_email_encrypted")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  cancelToken         String?   @unique @map("cancel_token")
+  cancelledAt         DateTime? @map("cancelled_at")
+  confirmationSent    Boolean   @default(false) @map("confirmation_sent")
+  confirmationSentAt  DateTime? @map("confirmation_sent_at")
+
+  user         User?        @relation(fields: [userId], references: [id])
+  professional Professional @relation(fields: [professionalId], references: [id])
+  service      Service      @relation(fields: [serviceId], references: [id])
+  services     AppointmentService[]
+
+  @@map("appointments")
+}
+
+model AppointmentService {
+  id              String @id @default(uuid())
+  appointmentId   String @map("appointment_id")
+  serviceId       String @map("service_id")
+  amountCents     Int    @map("amount_cents")
+  durationMinutes Int    @map("duration_minutes")
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  service     Service     @relation(fields: [serviceId], references: [id])
+
+  @@map("appointment_services")
+}
+
+model ProfessionalAvailability {
+  id             String @id @default(uuid())
+  professionalId String @map("professional_id")
+  dayOfWeek      Int    // 0=Sun, 6=Sat
+  startTime      String // "09:00"
+  endTime        String // "18:00"
+
+  professional Professional @relation(fields: [professionalId], references: [id])
+
+  @@unique([professionalId, dayOfWeek])
+  @@map("professional_availability")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("push_subscriptions")
+}
+
+enum Role {
+  CLIENT
+  PROFESSIONAL
+  ADMIN
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
