@@ -8,6 +8,15 @@ export const bookingRateLimit = {
   },
 }
 
+export const availableTimesRateLimit = {
+  config: {
+    rateLimit: {
+      max: 30,
+      timeWindow: '1 minute',
+    },
+  },
+}
+
 export const authRateLimit = {
   config: {
     rateLimit: {

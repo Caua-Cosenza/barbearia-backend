@@ -47,15 +47,14 @@ async function main() {
     },
   })
 
-  // Availability: Tue–Sat 08:20–19:00 (Mon/Sun closed)
+  // Availability: Mon–Thu 08:40–19:00. Fri+Sat = walk-in (order of arrival). Sun = closed.
   await prisma.professionalAvailability.deleteMany({ where: { professionalId: JHONATAN_ID } })
   await prisma.professionalAvailability.createMany({
     data: [
-      { professionalId: JHONATAN_ID, dayOfWeek: 2, startTime: '08:20', endTime: '19:00' },
-      { professionalId: JHONATAN_ID, dayOfWeek: 3, startTime: '08:20', endTime: '19:00' },
-      { professionalId: JHONATAN_ID, dayOfWeek: 4, startTime: '08:20', endTime: '19:00' },
-      { professionalId: JHONATAN_ID, dayOfWeek: 5, startTime: '08:20', endTime: '19:00' },
-      { professionalId: JHONATAN_ID, dayOfWeek: 6, startTime: '08:20', endTime: '19:00' },
+      { professionalId: JHONATAN_ID, dayOfWeek: 1, startTime: '08:40', endTime: '19:00' },
+      { professionalId: JHONATAN_ID, dayOfWeek: 2, startTime: '08:40', endTime: '19:00' },
+      { professionalId: JHONATAN_ID, dayOfWeek: 3, startTime: '08:40', endTime: '19:00' },
+      { professionalId: JHONATAN_ID, dayOfWeek: 4, startTime: '08:40', endTime: '19:00' },
     ],
   })
 
@@ -85,7 +84,7 @@ async function main() {
 
   const admin = await prisma.user.upsert({
     where: { email: ADMIN_EMAIL },
-    update: {},
+    update: { passwordHash },
     create: {
       email: ADMIN_EMAIL,
       passwordHash,
