@@ -68,8 +68,9 @@ export const availableTimesController = {
     }
 
     // Use combined duration when multiple services are selected; otherwise use
-    // the single service duration from the database.
-    const slotDuration = totalDurationMinutes ?? service.durationMinutes
+    // the single service duration from the database. Cap at 50 min max.
+    const rawDuration = totalDurationMinutes ?? service.durationMinutes
+    const slotDuration = Math.min(rawDuration, 50)
     const startMin = parseTime(availability.startTime)
     const endMin = parseTime(availability.endTime)
 
