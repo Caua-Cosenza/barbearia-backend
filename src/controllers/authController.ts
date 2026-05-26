@@ -12,6 +12,7 @@ const COOKIE_OPTS: CookieSerializeOptions = {
   secure: isProd,
   sameSite: isProd ? 'none' : 'strict',
   path: '/',
+  domain: isProd ? '.barbeariajhonatan.com' : undefined,
 }
 
 export const authController = {
