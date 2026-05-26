@@ -102,22 +102,22 @@ async function sendMessage(phone: string, message: string): Promise<void> {
 
 export const whatsappService = {
   async sendWelcomeMessage(phone: string, data: WelcomeData): Promise<void> {
+    // Mantive a sua estrutura de URL com o token no final. Certifique-se de que o seu frontend 
+    // está configurado para ler essa rota (ex: /cancelar/:token)
     const cancelUrl = `${env.FRONTEND_URL ?? ''}/cancelar/${data.cancelToken}`
 
     const message = [
-      `Olá, ${data.guestName}! 🎉`,
+      `Olá, *${data.guestName}*! 🎉`,
       '',
-      'Seu agendamento foi confirmado!',
+      `Seu agendamento foi confirmado para *${formatDate(data.scheduledAt)}* às *${formatTime(data.scheduledAt)}*!`,
       '',
-      `📅 *Data:* ${formatDate(data.scheduledAt)}`,
-      `🕐 *Horário:* ${formatTime(data.scheduledAt)}`,
       `✂️ *Serviços:* ${formatServices(data.services)}`,
       `💰 *Total:* R$ ${formatAmount(data.totalAmountCents)}`,
       '',
-      '🔗 Para cancelar seu agendamento:',
+      'Caso aconteça algum imprevisto e você não possa comparecer, você pode cancelar o seu horário clicando no link seguro abaixo:',
       cancelUrl,
       '',
-      '_O cancelamento é permitido até 1 hora antes do horário._',
+      '⚠️ *Atenção:* O cancelamento através deste link só é permitido com até *1 hora de antecedência* do seu horário marcado.',
       '',
       'Até logo! 💈',
     ].join('\n')
