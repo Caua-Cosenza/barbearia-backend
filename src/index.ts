@@ -17,7 +17,7 @@ import { adminRoutes } from './routes/admin'
 import { cancelRoutes } from './routes/cancel'
 import { errorHandler } from './middleware/errorHandler'
 import { logger } from './utils/logger'
-import { startReminderJob } from './jobs/reminderJob'
+// import { startReminderJob } from './jobs/reminderJob'
 
 const app = Fastify({ logger: false })
 
@@ -94,10 +94,10 @@ async function bootstrap() {
   await app.listen({ port: env.PORT, host: env.HOST })
   logger.info(`Server running on http://${env.HOST}:${env.PORT}`)
 
-  if (env.NODE_ENV !== 'test') {
-    startReminderJob()
-    logger.info('Reminder job started')
-  }
+  // if (env.NODE_ENV !== 'test') {
+  //   startReminderJob()
+  //   logger.info('Reminder job started')
+  // }
 }
 
 bootstrap().catch((err) => {
