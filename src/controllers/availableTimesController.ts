@@ -4,6 +4,7 @@ import { createApiResponse, createErrorResponse } from '../utils/validation'
 import { professionalRepository } from '../repositories/professionalRepository'
 import { serviceRepository } from '../repositories/serviceRepository'
 import { appointmentRepository } from '../repositories/appointmentRepository'
+import { prisma } from '../config/database'
 
 const AvailableTimesSchema = z.object({
   professionalId: z.string().uuid('Invalid professional ID'),
@@ -34,6 +35,16 @@ function getBrazilNow(): { todayStr: string; currentMinutes: number } {
 function parseTime(time: string): number {
   const [h, m] = time.split(':').map(Number)
   return h * 60 + m
+}
+
+function isSlotBlocked(
+  slotStart: string,
+  slotDuration: number,
+  blocks: { startTime: string; endTime: string }[],
+): boolean {
+  const slotStartMin = parseTime(slotStart)
+  const slotEndMin = slotStartMin + slotDuration
+  return blocks.some((b) => slotStartMin < parseTime(b.endTime) && slotEndMin > parseTime(b.startTime))
 }
 
 export const availableTimesController = {
@@ -77,11 +88,10 @@ export const availableTimesController = {
     const dayStart = new Date(y, mo - 1, d, 0, 0, 0, 0)
     const dayEnd = new Date(y, mo - 1, d, 23, 59, 59, 999)
 
-    const existing = await appointmentRepository.findByProfessionalAndDate(
-      professionalId,
-      dayStart,
-      dayEnd,
-    )
+    const [existing, blockedSlots] = await Promise.all([
+      appointmentRepository.findByProfessionalAndDate(professionalId, dayStart, dayEnd),
+      prisma.blockedSlot.findMany({ where: { professionalId, date } }),
+    ])
 
     // Build sorted list of occupied time blocks.
     // For N:N appointments use the sum of AppointmentService.durationMinutes;
@@ -127,12 +137,15 @@ export const availableTimesController = {
       }
     }
 
-    // Remove slots that are less than 30 minutes away if today in Brazil time.
+    // Remove slots that are less than 15 minutes away if today in Brazil time.
     const { todayStr, currentMinutes } = getBrazilNow()
     if (date === todayStr) {
       const cutoff = currentMinutes + 15
       freeSlots = freeSlots.filter((slot) => parseTime(slot) >= cutoff)
     }
+
+    // Remove slots that overlap with admin-created blocked periods.
+    freeSlots = freeSlots.filter((slot) => !isSlotBlocked(slot, slotDuration, blockedSlots))
 
     return reply.send(createApiResponse({ slots: freeSlots }))
   },

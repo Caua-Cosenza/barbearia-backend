@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { authenticateAdmin } from '../middleware/auth'
 import { adminController } from '../controllers/adminController'
+import { blockedSlotsController } from '../controllers/blockedSlotsController'
 import { prisma } from '../config/database'
 import { createApiResponse } from '../utils/validation'
 
@@ -34,6 +35,15 @@ export async function adminRoutes(app: FastifyInstance) {
 
   // GET /api/v1/admin/stats
   app.get('/stats', adminController.getStats)
+
+  // POST   /api/v1/admin/blocked-slots
+  app.post('/blocked-slots', blockedSlotsController.create)
+
+  // GET    /api/v1/admin/blocked-slots?date=YYYY-MM-DD&professionalId=uuid
+  app.get('/blocked-slots', blockedSlotsController.list)
+
+  // DELETE /api/v1/admin/blocked-slots/:id
+  app.delete('/blocked-slots/:id', blockedSlotsController.remove)
 
   // POST /api/v1/admin/push-subscription — save/update push subscription
   app.post('/push-subscription', async (req, reply) => {

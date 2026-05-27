@@ -35,6 +35,7 @@ model Professional {
 
   appointments Appointment[]
   availability ProfessionalAvailability[]
+  blockedSlots BlockedSlot[]
 
   @@map("professionals")
 }
@@ -133,6 +134,20 @@ model PushSubscription {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("push_subscriptions")
+}
+
+model BlockedSlot {
+  id             String       @id @default(uuid())
+  professionalId String       @map("professional_id")
+  date           String       // "YYYY-MM-DD"
+  startTime      String       @map("start_time") // "HH:MM"
+  endTime        String       @map("end_time")   // "HH:MM"
+  reason         String?
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  professional Professional @relation(fields: [professionalId], references: [id])
+
+  @@map("blocked_slots")
 }
 
 enum Role {
