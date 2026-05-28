@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
+import { prisma } from '../config/database'
 import { appointmentRepository } from '../repositories/appointmentRepository'
 import { serviceRepository } from '../repositories/serviceRepository'
 import { professionalRepository } from '../repositories/professionalRepository'
@@ -93,14 +94,47 @@ export const appointmentService = {
     const totalDurationMinutes = services.reduce((sum, s) => sum + s.durationMinutes, 0)
 
     const scheduledAt = new Date(dto.scheduledAt)
-    const slotTaken = await appointmentRepository.isSlotTaken(
-      dto.professionalId,
-      scheduledAt,
-      totalDurationMinutes,
-    )
-    if (slotTaken) {
-      throw Object.assign(new Error('Time slot is not available'), { statusCode: 409 })
+
+    // Fix 7: Reject bookings scheduled in the past
+    if (scheduledAt <= new Date()) {
+      throw Object.assign(new Error('Não é possível agendar no passado'), { statusCode: 400 })
     }
+
+    // Fix 2A: Professional must have availability configured for this day of week
+    const [y, mo, d] = dto.scheduledAt.split('T')[0].split('-').map(Number)
+    const dayOfWeek = new Date(y, mo - 1, d).getDay()
+    const availability = await prisma.professionalAvailability.findFirst({
+      where: { professionalId: dto.professionalId, dayOfWeek },
+    })
+    if (!availability) {
+      throw Object.assign(new Error('Profissional não atende neste dia'), { statusCode: 400 })
+    }
+
+    // Fix 2B: Requested time must fall within working hours (Brazil local time UTC-3)
+    const brazilLocal = new Date(scheduledAt.getTime() + (-3 * 60 * 60 * 1000))
+    const requestedStart = brazilLocal.getUTCHours() * 60 + brazilLocal.getUTCMinutes()
+    const [startH, startM] = availability.startTime.split(':').map(Number)
+    const [endH, endM] = availability.endTime.split(':').map(Number)
+    if (requestedStart < startH * 60 + startM || requestedStart >= endH * 60 + endM) {
+      throw Object.assign(new Error('Horário fora do expediente'), { statusCode: 400 })
+    }
+
+    // Fix 1: Reject if time overlaps with an admin-blocked slot
+    const blockDate = dto.scheduledAt.split('T')[0]
+    const blockedSlots = await prisma.blockedSlot.findMany({
+      where: { professionalId: dto.professionalId, date: blockDate },
+    })
+    const slotDuration = Math.min(totalDurationMinutes, 50)
+    const slotEndMin = requestedStart + slotDuration
+    for (const block of blockedSlots) {
+      const [bsh, bsm] = block.startTime.split(':').map(Number)
+      const [beh, bem] = block.endTime.split(':').map(Number)
+      if (requestedStart < beh * 60 + bem && slotEndMin > bsh * 60 + bsm) {
+        throw Object.assign(new Error('Este horário está reservado pelo profissional'), { statusCode: 409 })
+      }
+    }
+
+    // Fix 3: isSlotTaken moved inside the DB transaction (appointmentRepository.createPublic)
 
     const cancelToken = uuidv4()
     const guestNameEncrypted = encrypt(dto.guestName)

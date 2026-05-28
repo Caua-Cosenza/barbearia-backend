@@ -27,7 +27,8 @@ export const blockedSlotsController = {
   async create(req: FastifyRequest, reply: FastifyReply) {
     const body = createBlockedSlotSchema.parse(req.body)
 
-    const today = new Date().toISOString().split('T')[0]
+    const brasilNow = new Date(Date.now() + (-3 * 60 * 60 * 1000))
+    const today = `${brasilNow.getUTCFullYear()}-${String(brasilNow.getUTCMonth() + 1).padStart(2, '0')}-${String(brasilNow.getUTCDate()).padStart(2, '0')}`
     if (body.date < today) {
       return reply
         .status(400)

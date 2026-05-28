@@ -87,7 +87,19 @@ export const appointmentRepository = {
     services: Array<{ serviceId: string; amountCents: number; durationMinutes: number }>
   }) {
     const { services, ...appointmentData } = data
+    const totalDuration = services.reduce((sum, s) => sum + s.durationMinutes, 0)
+    const slotEnd = new Date(data.scheduledAt.getTime() + Math.min(totalDuration, 50) * 60 * 1000)
     return prisma.$transaction(async (tx) => {
+      const conflict = await tx.appointment.findFirst({
+        where: {
+          professionalId: data.professionalId,
+          status: { in: ['PENDING', 'CONFIRMED'] },
+          scheduledAt: { gte: data.scheduledAt, lt: slotEnd },
+        },
+      })
+      if (conflict) {
+        throw Object.assign(new Error('Horário já ocupado'), { statusCode: 409 })
+      }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const appointment = await tx.appointment.create({ data: { ...appointmentData, userId: null } as any })
       await tx.appointmentService.createMany({
