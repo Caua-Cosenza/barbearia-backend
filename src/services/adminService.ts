@@ -22,6 +22,10 @@ export interface AdminAppointmentRow {
     name: string
     durationMinutes: number
   }
+  services: {
+    name: string
+    durationMinutes: number
+  }[]
   professional: {
     id: string
     name: string
@@ -69,6 +73,7 @@ function decryptAppointment(a: {
   guestEmailEncrypted: string | null
   user: { nameEncrypted: string; phoneEncrypted: string } | null
   service: { id: string; name: string; durationMinutes: number }
+  services: { service: { name: string; durationMinutes: number } }[]
   professional: { id: string; nameEncrypted: string }
 }): AdminAppointmentRow {
   const customerName = a.guestNameEncrypted
@@ -97,6 +102,10 @@ function decryptAppointment(a: {
       name: a.service.name,
       durationMinutes: a.service.durationMinutes,
     },
+    services: a.services.map((as) => ({
+      name: as.service.name,
+      durationMinutes: as.service.durationMinutes,
+    })),
     professional: {
       id: a.professional.id,
       name: decrypt(a.professional.nameEncrypted),
@@ -120,6 +129,7 @@ export const adminService = {
       orderBy: { scheduledAt: 'asc' },
       include: {
         service: { select: { id: true, name: true, durationMinutes: true } },
+        services: { include: { service: { select: { name: true, durationMinutes: true } } } },
         professional: { select: { id: true, nameEncrypted: true } },
         user: { select: { nameEncrypted: true, phoneEncrypted: true } },
       },

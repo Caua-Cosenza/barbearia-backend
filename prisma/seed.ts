@@ -17,7 +17,7 @@ async function main() {
     { name: 'Cavanhaque', description: 'Modelagem de cavanhaque', durationMinutes: 5, amountCents: 2000 },
     { name: 'Barba Desenhada', description: 'Barba com design personalizado', durationMinutes: 20, amountCents: 2500 },
     { name: 'Barba Grande', description: 'Tratamento completo para barba grande', durationMinutes: 20, amountCents: 3000 },
-    { name: 'Pigmentação de Cabelo Curto', description: 'Pigmentação capilar para cabelo curto', durationMinutes: 20, amountCents: 2000 },
+    { name: 'Pigmentação de Cabelo Curto', description: 'Pigmentação capilar para cabelo curto', durationMinutes: 10, amountCents: 2000 },
     { name: 'Pigmentação de Barba', description: 'Pigmentação para barba', durationMinutes: 25, amountCents: 2500 },
     { name: 'Sobrancelha', description: 'Design e aparagem de sobrancelha', durationMinutes: 3, amountCents: 700 },
     { name: 'Acabamento / Pé', description: 'Acabamento e alinhamento', durationMinutes: 10, amountCents: 1000 },

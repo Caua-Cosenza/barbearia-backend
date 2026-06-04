@@ -102,10 +102,11 @@ export const availableTimesController = {
         const brazilTime = new Date(apt.scheduledAt.getTime() + BRAZIL_OFFSET_MS)
         const aptStart = brazilTime.getUTCHours() * 60 + brazilTime.getUTCMinutes()
 
-        const aptDuration =
+        const rawAptDuration =
           apt.services.length > 0
             ? apt.services.reduce((sum, s) => sum + s.durationMinutes, 0)
             : (apt.service?.durationMinutes ?? 30)
+        const aptDuration = Math.min(rawAptDuration, 50)
 
         return { start: aptStart, end: aptStart + aptDuration }
       })
