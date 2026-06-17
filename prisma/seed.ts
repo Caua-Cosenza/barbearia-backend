@@ -51,10 +51,10 @@ async function main() {
   await prisma.professionalAvailability.deleteMany({ where: { professionalId: JHONATAN_ID } })
   await prisma.professionalAvailability.createMany({
     data: [
-      { professionalId: JHONATAN_ID, dayOfWeek: 1, startTime: '08:40', endTime: '19:00' },
-      { professionalId: JHONATAN_ID, dayOfWeek: 2, startTime: '08:40', endTime: '19:00' },
-      { professionalId: JHONATAN_ID, dayOfWeek: 3, startTime: '08:40', endTime: '19:00' },
-      { professionalId: JHONATAN_ID, dayOfWeek: 4, startTime: '08:40', endTime: '19:00' },
+      { professionalId: JHONATAN_ID, dayOfWeek: 1, startTime: '08:40', endTime: '19:30' },
+      { professionalId: JHONATAN_ID, dayOfWeek: 2, startTime: '08:40', endTime: '19:30' },
+      { professionalId: JHONATAN_ID, dayOfWeek: 3, startTime: '08:40', endTime: '19:30' },
+      { professionalId: JHONATAN_ID, dayOfWeek: 4, startTime: '08:40', endTime: '19:30' },
     ],
   })
 
@@ -65,13 +65,14 @@ async function main() {
     where: { id: Emerson_ID },
     update: {
       isWalkIn: true,
-      nameEncrypted: encrypt('Emerson Figueiredo'),
-      bio: 'Especialista em cortes degradê e navalhados',
+      nameEncrypted: encrypt('Sandro Santos'),
+      bio: 'Especialista em cortes degradê, navalhados e corte infantil',
+      isActive: true,
     },
     create: {
       id: Emerson_ID,
-      nameEncrypted: encrypt('Emerson Figueiredo'),
-      bio: 'Especialista em cortes degradê e navalhados',
+      nameEncrypted: encrypt('Sandro Santos'),
+      bio: 'Especialista em cortes degradê, navalhados e corte infantil',
       isWalkIn: true,
       isActive: true,
     },
